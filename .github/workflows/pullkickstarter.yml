@@ -3,7 +3,7 @@ name: Pull Kickstarter Stuff
 on:
   schedule:
     - cron: "*/30 * * * *"  # Every 30 minutes
-  workflow_dispatch:        # Allow manual run
+  workflow_dispatch:
 
 jobs:
   update:
@@ -13,40 +13,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install tools
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl
+          sudo apt-get install -y jq curl
 
-      - name: Fetch Kickstarter project HTML
+      - name: Fetch and parse json
         run: |
-          curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch > page.html
+          curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch.json -o data.json
 
-      - name: Parse Kickstarter data and write JSON
-        run: |
-          # Extract percent funded
-          percent=$(grep -oP 'project-stats-value">[0-9.]+%' page.html | grep -oP '[0-9.]+' | head -n 1)
+          pledged=$(jq '.project.pledged' data.json)
+          goal=$(jq '.project.goal' data.json)
+          deadline=$(jq -r '.project.deadline' data.json)
 
-          # Extract pledged amount
-          pledged=$(grep -oP 'money">\$[0-9,]+' page.html | grep -oP '[0-9,]+' | tr -d ',')
+          pledged_dollars=$(awk "BEGIN { printf \"%.0f\", $pledged / 100 }")
+          goal_dollars=$(awk "BEGIN { printf \"%.0f\", $goal / 100 }")
+          percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
 
-          # Extract end time
-          end_time=$(grep -oP 'ksr_page_timer" data-end_time="\K[^"]+' page.html | head -n 1)
+          end_time=$(date -u -d @"$deadline" +%Y-%m-%dT%H:%M:%SZ)
 
-          # Safety check
-          if [ -z "$percent" ] || [ -z "$pledged" ] || [ -z "$end_time" ]; then
-            echo "Failed to extract one or more Kickstarter values"
-            exit 1
-          fi
-
-          # Compute goal
-          goal=$(awk "BEGIN { printf \"%.0f\", $pledged / ($percent / 100) }")
-
-          # Write to JSON file
           echo "{
-            \"pledged\": $pledged,
+            \"pledged\": $pledged_dollars,
             \"percent\": $percent,
-            \"goal\": $goal,
+            \"goal\": $goal_dollars,
             \"end_time\": \"$end_time\",
             \"updated\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
           }" > kickstarter.json

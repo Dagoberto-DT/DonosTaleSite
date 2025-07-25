@@ -145,6 +145,10 @@
 	
 	/* banner stuff */
 	
+	.header {
+	pointer-events:none;
+	}
+	
 	.bannermain {
 	width:100%;
 	}
@@ -154,6 +158,10 @@
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	}
+	
+	.berrybanner {
+	pointer-events:all !important;
 	}
 	
 	.donobanner, .berrybanner, .soldierbanner, .taddbanner, .logobanner, .flowerbanner, .batbanner, .katakana {
@@ -349,7 +357,21 @@
 	}
 	
 	}
+	
+	
+	@media (max-width: 1010px) {
 
+	.donokickstartericon {
+	display:none;
+	}
+	
+	.amountraised, .helpus {
+	float:left !important;
+	text-align:center;
+	width: 100%;
+	}
+
+	}
 	
 	@media (max-width: 800px) {
 	
@@ -530,8 +552,67 @@
 	#widget h1 em {
 	color: #bbdaff;
 	}
-
 	
+	.kickstartercontainer {
+	background-color: #fff;
+	padding: 0 20px 15px;
+	border-radius: 20px;
+	margin: 30px auto 40px;
+	max-width: 835px;
+	display: flex;
+	}
+
+	.progress-bar {
+    background: #478adb;
+    width: 100%;
+    height: 30px;
+	overflow:hidden;
+    border-radius: 100px;
+	}
+	
+	.fill {
+    background: #51acfe;
+    height: 100%;
+    width: 0;
+    transition: width 1s ease;
+	}
+	
+	.amountraised, .helpus {
+	color:#478adb;
+	float:right;
+	padding:3px;
+	}
+	
+	.helpus {
+	padding:0;
+	}
+	
+	.helpus a {
+	color: #97c7f3;
+	}
+	
+	.helpus a:hover {
+	color: #a6cdfd;
+	}
+	
+	.donokickstartericon {
+	flex: 1.5;
+	position:relative;
+	pointer-events:none;
+	}
+	
+	.donokickicon {
+	height: 335px;
+	position: absolute;
+	bottom: -102px;
+	left: -120px;
+	}
+	
+	.kickerstarterprogessbar {
+	flex: 5;
+	height: fit-content;
+	padding-top: 2%;
+	}
 	
 	</style>
 
@@ -582,10 +663,29 @@
 	
 	
 		<div class="mainbody">
+		
+		
+		<div class="kickstartercontainer">
+			<div class="donokickstartericon">
+				<img id="donoimage" class="donokickicon" src="graphics/kickstarter/Dono_fruit_basket_art.png">
+			</div>
+			
+			<div class="kickerstarterprogessbar">
+				<div class="helpus">Help us reach our Kickstarter goal at <a href="http://kck.st/46Z3mfF">kck.st/46Z3mfF</a>!</div>
+				<div id="kickstarter-progress">
+					<div class="progress-bar">
+						<div class="fill" id="progress-fill"></div>
+					</div>
+					<b class="amountraised"><span id="days-left"></span> days to go, <span id="amount-raised"></span> / <span id="goal-amount"></span> pledged</b>
+				</div>
+			</div>
+		</div>
+		
+		
 			<iframe class="steamtemp" src="https://store.steampowered.com/widget/1812250/" frameborder="0"></iframe>
 			
 			<div class="container">
-				<iframe class="aboutvideo" src="https://www.youtube.com/embed/TXyuLl-uBBg?si=mxhx7Rxr49UabZy3" controls=0 title="YouTube video player" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+				<iframe class="aboutvideo" width="560" height="315" src="https://www.youtube.com/embed/e1hmY-Iff_w?si=eFYlndH_ivpAVt7d" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 				
 				<div class="holdthetext">
 					<!-- <h1 class="aboutheading">About</h1> -->
@@ -608,7 +708,7 @@
 			<p class="madeby two">Site by <a href="https://kingmayro.github.io/"><img class="kmpfp" src="https://kingmayro.github.io/image/KingMayro.jpg"> KingMayro</a></p>
 			
 			<div class="socialgroup">				
-				<!-- <a href="https://bsky.app/profile/famicomcd.org"><img src="graphics/socialicon/twittersocialicon.png" alt="Bluesky" class="socials"></a> -->
+				<a href="https://bsky.app/profile/donostale.bsky.social"><img src="graphics/socialicon/blueskysocialicon.png" alt="Bluesky" class="socials"></a>
 				<a href="https://www.youtube.com/@donostale"><img src="graphics/socialicon/youtubesocialicon.png" alt="YouTube" class="socials"></a> 	
 				<a href="https://discord.gg/pQtMsqQ4hk"><img src="graphics/socialicon/discordsocialicon.png" alt="Discord" class="socials"></a>
 					
@@ -624,11 +724,54 @@
 	
 	
 	</footer>
-	
+
 	<script>
-	
-	
-	
+		function daysRemaining(endTime) {
+		  const end = new Date(endTime);
+		  const now = new Date();
+		  const diffMs = end - now;
+		  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24) - 1);
+		  return diffDays > 0 ? diffDays : 0;
+		}
+
+		async function loadKickstarterData() {
+		  const res = await fetch('kickstarter.json');
+		  const data = await res.json();
+
+		  const pledged = data.pledged;
+		  const percent = data.percent;
+		  const goal = data.goal;
+		  const endTime = data.end_time;
+
+		  document.getElementById("progress-fill").style.width = `${percent}%`;
+		  document.getElementById("amount-raised").textContent = `$${pledged.toLocaleString()}`;
+		  document.getElementById("goal-amount").textContent = `$${goal.toLocaleString()}`;
+		  document.getElementById("days-left").textContent = daysRemaining(endTime);
+		}
+
+		loadKickstarterData();
+
+		function setRandomDonoImage() {
+		  const images = [
+			"graphics/kickstarter/Dono_Fly_Art.png",
+			// "graphics/kickstarter/Dono_front_Art.png",
+			"graphics/kickstarter/Dono_fruit_basket_art.png",
+			"graphics/kickstarter/Dono_Gaming.png",
+			"graphics/kickstarter/Dono_present_art.png",
+			"graphics/kickstarter/Dono_siting_art.png",
+			"graphics/kickstarter/Dono_slash_Art.png"
+		  ];
+
+		  const randomIndex = Math.floor(Math.random() * images.length);
+		  const selectedDono = images[randomIndex];
+
+		  const donoimg = document.getElementById("donoimage");
+		  if (donoimg) {
+			donoimg.src = selectedDono;
+		  }
+		}
+
+		setRandomDonoImage();
 
 
 		document.addEventListener("DOMContentLoaded", () => {

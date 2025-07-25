@@ -34,14 +34,6 @@ jobs:
 
           percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
 
-          end_time="2025-08-24T13:02:20-04:00"
-
-          if [ -n "$end_time_raw" ]; then
-            end_time=$(date -u -d "$end_time_raw" +"%Y-%m-%dT%H:%M:%SZ")
-          else
-            end_time=""
-          fi
-
           echo "{
             \"pledged\": $pledged,
             \"percent\": $percent,
@@ -49,7 +41,7 @@ jobs:
             \"backers\": $backers,
             \"comments\": $comments,
             \"state\": \"$state\",
-            \"end_time\": \"$end_time\",
+            \"end_time\": \"2025-08-24T13:02:20-04:00",
             \"updated\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
           }" > kickstarter.json
 

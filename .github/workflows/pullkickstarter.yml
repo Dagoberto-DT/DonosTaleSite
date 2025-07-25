@@ -18,20 +18,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq curl
 
-      - name: Fetch and parse json
+      - name: Fetch and parse JSON
         run: |
           curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch > page.html
           
           pledged=$(grep -oP '\$\d{1,3}(,\d{3})*' page.html | head -1 | tr -d '$,')
-
           percent=$(grep -oP '\d+(?=% funded)' page.html | head -1)
-          
+
+          if [[ -z "$pledged" || -z "$percent" ]]; then
+            echo "Failed to extract pledged or percent. Aborting."
+            exit 1
+          fi
+
           goal=$(awk "BEGIN { printf \"%.0f\", $pledged / ($percent / 100) }")
-          
+
           end_time=$(grep -oP 'data-end_time="\K[^"]+' page.html)
-          
+          if [[ -z "$end_time" ]]; then
+            echo "Failed to extract end_time. Aborting."
+            exit 1
+          fi
+
           end_time_utc=$(date -u -d "$end_time" +"%Y-%m-%dT%H:%M:%SZ")
-          
+
           echo "{
             \"pledged\": $pledged,
             \"percent\": $percent,

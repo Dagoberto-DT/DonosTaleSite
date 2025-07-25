@@ -1,0 +1,65 @@
+name: Pull Kickstarter Stuff
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"  # Every 30 minutes
+  workflow_dispatch:        # Allow manual run
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+      - name: Fetch Kickstarter project HTML
+        run: |
+          curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch > page.html
+
+      - name: Parse Kickstarter data and write JSON
+        run: |
+          # Extract percent funded
+          percent=$(grep -oP 'project-stats-value">[0-9.]+%' page.html | grep -oP '[0-9.]+' | head -n 1)
+
+          # Extract pledged amount
+          pledged=$(grep -oP 'money">\$[0-9,]+' page.html | grep -oP '[0-9,]+' | tr -d ',')
+
+          # Extract end time
+          end_time=$(grep -oP 'ksr_page_timer" data-end_time="\K[^"]+' page.html | head -n 1)
+
+          # Safety check
+          if [ -z "$percent" ] || [ -z "$pledged" ] || [ -z "$end_time" ]; then
+            echo "Failed to extract one or more Kickstarter values"
+            exit 1
+          fi
+
+          # Compute goal
+          goal=$(awk "BEGIN { printf \"%.0f\", $pledged / ($percent / 100) }")
+
+          # Write to JSON file
+          echo "{
+            \"pledged\": $pledged,
+            \"percent\": $percent,
+            \"goal\": $goal,
+            \"end_time\": \"$end_time\",
+            \"updated\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
+          }" > kickstarter.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          if git diff --quiet; then
+            echo "No changes to commit."
+          else
+            git add kickstarter.json
+            git commit -m "Update Kickstarter data [auto]"
+            git push
+          fi

@@ -1,5 +1,8 @@
 name: Pull Kickstarter Stuff
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: "*/30 * * * *"

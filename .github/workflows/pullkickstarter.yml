@@ -20,25 +20,26 @@ jobs:
 
       - name: Fetch and parse json
         run: |
-          curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch.json -o data.json
+          curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch > page.html
+          
+          pledged=$(grep -oP '\$\d{1,3}(,\d{3})*' page.html | head -1 | tr -d '$,')
 
-          pledged=$(jq '.project.pledged' data.json)
-          goal=$(jq '.project.goal' data.json)
-          deadline=$(jq -r '.project.deadline' data.json)
-
-          pledged_dollars=$(awk "BEGIN { printf \"%.0f\", $pledged / 100 }")
-          goal_dollars=$(awk "BEGIN { printf \"%.0f\", $goal / 100 }")
-          percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
-
-          end_time=$(date -u -d @"$deadline" +%Y-%m-%dT%H:%M:%SZ)
-
+          percent=$(grep -oP '\d+(?=% funded)' page.html | head -1)
+          
+          goal=$(awk "BEGIN { printf \"%.0f\", $pledged / ($percent / 100) }")
+          
+          end_time=$(grep -oP 'data-end_time="\K[^"]+' page.html)
+          
+          end_time_utc=$(date -u -d "$end_time" +"%Y-%m-%dT%H:%M:%SZ")
+          
           echo "{
-            \"pledged\": $pledged_dollars,
+            \"pledged\": $pledged,
             \"percent\": $percent,
-            \"goal\": $goal_dollars,
-            \"end_time\": \"$end_time\",
+            \"goal\": $goal,
+            \"end_time\": \"$end_time_utc\",
             \"updated\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
           }" > kickstarter.json
+
 
       - name: Commit and push if changed
         run: |

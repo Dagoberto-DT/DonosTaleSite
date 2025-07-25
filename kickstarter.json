@@ -1,7 +1,10 @@
 {
-  "pledged": 2880,
-  "percent": 28.8,
+  "pledged": 4325,
+  "percent": 43.25,
   "goal": 10000,
-  "end_time": "2025-08-24T13:02:20-04:00",
-  "updated": "2025-07-25T18:00:00Z"
+  "backers": 86,
+  "comments": 3,
+  "state": "live",
+  "end_time": "",
+  "updated": "2025-07-25T22:47:42Z"
 }

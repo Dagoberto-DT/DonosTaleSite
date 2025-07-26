@@ -26,11 +26,24 @@ jobs:
           curl -s https://www.kickstarter.com/projects/superitemstudios/donos-tale-relaunch/stats.json -o stats.json
 
           pledged_float=$(jq -r '.project.pledged' stats.json)
-          pledged=$(printf "%.0f" "$pledged_float")  # strip decimals
+          pledged=$(printf "%.0f" "$pledged_float")
           backers=$(jq -r '.project.backers_count' stats.json)
           comments=$(jq -r '.project.comments_count' stats.json)
           state=$(jq -r '.project.state' stats.json)
+
           goal=10000
+          fill_color="#51acfe"
+          bar_color="#478adb"
+
+          if (( pledged >= 100000 )); then goal=100000; fill_color="#ffd34d"; bar_color="#db972d"
+          elif (( pledged >= 75000 )); then goal=75000; fill_color="#da2e2e"; bar_color="#ab0b0b"
+          elif (( pledged >= 60000 )); then goal=60000; fill_color="#2fc75a"; bar_color="#1b9e40"
+          elif (( pledged >= 50000 )); then goal=50000; fill_color="#fda04d"; bar_color="#ca6b17"
+          elif (( pledged >= 40000 )); then goal=40000; fill_color="#9166e3"; bar_color="#6336bc"
+          elif (( pledged >= 30000 )); then goal=30000; fill_color="#ffd34d"; bar_color="#db972d"
+          elif (( pledged >= 20000 )); then goal=20000; fill_color="#da2e2e"; bar_color="#ab0b0b"
+          elif (( pledged >= 15000 )); then goal=15000; fill_color="#2fc75a"; bar_color="#1b9e40"
+          fi
 
           percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
 
@@ -45,11 +58,18 @@ jobs:
             \"updated\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
           }" > kickstarter.json
 
+          if [ -f "dono.css" ]; then
+            sed -i "541s|background:.*|background: $bar_color;|" dono.css
+            sed -i "549s|background:.*|background: $fill_color;|" dono.css
+          else
+            echo "can't find css"
+          fi
 
-      - name: Commit and push kickstarter.json
+      - name: Commit and push the json and css
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add kickstarter.json
+
+          git add kickstarter.json dono.css || true
           git commit -m "Update Kickstarter stats" || echo "No changes to commit"
           git push

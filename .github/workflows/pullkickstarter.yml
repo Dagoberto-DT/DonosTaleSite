@@ -30,26 +30,7 @@ jobs:
           backers=$(jq -r '.project.backers_count' stats.json)
           comments=$(jq -r '.project.comments_count' stats.json)
           state=$(jq -r '.project.state' stats.json)
-
-          goal=10000
-          fill_color="#51acfe"
-          bar_color="#478adb"
-
-          set_goal() {
-            goal=$1
-            fill_color=$2
-            bar_color=$3
-          }
-
-          if [ "$pledged" -ge 100000 ]; then set_goal 100000 "#ffd34d" "#db972d"
-          elif [ "$pledged" -ge 75000 ]; then set_goal 75000 "#da2e2e" "#ab0b0b"
-          elif [ "$pledged" -ge 60000 ]; then set_goal 60000 "#2fc75a" "#1b9e40"
-          elif [ "$pledged" -ge 50000 ]; then set_goal 50000 "#fda04d" "#ca6b17"
-          elif [ "$pledged" -ge 40000 ]; then set_goal 40000 "#9166e3" "#6336bc"
-          elif [ "$pledged" -ge 30000 ]; then set_goal 30000 "#ffd34d" "#db972d"
-          elif [ "$pledged" -ge 20000 ]; then set_goal 20000 "#da2e2e" "#ab0b0b"
-          elif [ "$pledged" -ge 15000 ]; then set_goal 15000 "#2fc75a" "#1b9e40"
-          fi
+          goal=15000
 
           percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
 
@@ -64,18 +45,11 @@ jobs:
             \"updated\": \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
           }" > kickstarter.json
 
-          if [ -f "dono.css" ]; then
-            sed -i 's|\.progress-bar *{[^}]*background: *#[0-9a-fA-F]\{6\};|.progress-bar {\n    background: '"$bar_color"';|' dono.css
-            sed -i 's|\.fill *{[^}]*background: *#[0-9a-fA-F]\{6\};|.fill {\n    background: '"$fill_color"';|' dono.css
-          else
-            echo "something brokey"
-          fi
 
-      - name: Commit and push the json and css
+      - name: Commit and push kickstarter.json
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git add kickstarter.json dono.css || true
-          git commit -m "Update Kickstarter stats and CSS colors" || echo "No changes to commit"
+          git add kickstarter.json
+          git commit -m "Update Kickstarter stats" || echo "No changes to commit"
           git push

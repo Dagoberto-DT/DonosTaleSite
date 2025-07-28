@@ -35,14 +35,20 @@ jobs:
           fill_color="#51acfe"
           bar_color="#478adb"
 
-          if (( pledged >= 100000 )); then goal=100000; fill_color="#ffd34d"; bar_color="#db972d"
-          elif (( pledged >= 75000 )); then goal=75000; fill_color="#da2e2e"; bar_color="#ab0b0b"
-          elif (( pledged >= 60000 )); then goal=60000; fill_color="#2fc75a"; bar_color="#1b9e40"
-          elif (( pledged >= 50000 )); then goal=50000; fill_color="#fda04d"; bar_color="#ca6b17"
-          elif (( pledged >= 40000 )); then goal=40000; fill_color="#9166e3"; bar_color="#6336bc"
-          elif (( pledged >= 30000 )); then goal=30000; fill_color="#ffd34d"; bar_color="#db972d"
-          elif (( pledged >= 20000 )); then goal=20000; fill_color="#da2e2e"; bar_color="#ab0b0b"
-          elif (( pledged >= 15000 )); then goal=15000; fill_color="#2fc75a"; bar_color="#1b9e40"
+          set_goal() {
+            goal=$1
+            fill_color=$2
+            bar_color=$3
+          }
+
+          if [ "$pledged" -ge 100000 ]; then set_goal 100000 "#ffd34d" "#db972d"
+          elif [ "$pledged" -ge 75000 ]; then set_goal 75000 "#da2e2e" "#ab0b0b"
+          elif [ "$pledged" -ge 60000 ]; then set_goal 60000 "#2fc75a" "#1b9e40"
+          elif [ "$pledged" -ge 50000 ]; then set_goal 50000 "#fda04d" "#ca6b17"
+          elif [ "$pledged" -ge 40000 ]; then set_goal 40000 "#9166e3" "#6336bc"
+          elif [ "$pledged" -ge 30000 ]; then set_goal 30000 "#ffd34d" "#db972d"
+          elif [ "$pledged" -ge 20000 ]; then set_goal 20000 "#da2e2e" "#ab0b0b"
+          elif [ "$pledged" -ge 15000 ]; then set_goal 15000 "#2fc75a" "#1b9e40"
           fi
 
           percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
@@ -59,17 +65,17 @@ jobs:
           }" > kickstarter.json
 
           if [ -f "dono.css" ]; then
-            sed -i "541s|background:.*|background: $bar_color;|" dono.css
-            sed -i "549s|background:.*|background: $fill_color;|" dono.css
+            sed -i 's|\.progress-bar *{[^}]*background: *#[0-9a-fA-F]\{6\};|.progress-bar {\n    background: '"$bar_color"';|' dono.css
+            sed -i 's|\.fill *{[^}]*background: *#[0-9a-fA-F]\{6\};|.fill {\n    background: '"$fill_color"';|' dono.css
           else
-            echo "can't find css"
+            echo "something brokey"
           fi
 
       - name: Commit and push the json and css
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
+          
           git add kickstarter.json dono.css || true
-          git commit -m "Update Kickstarter stats" || echo "No changes to commit"
+          git commit -m "Update Kickstarter stats and CSS colors" || echo "No changes to commit"
           git push

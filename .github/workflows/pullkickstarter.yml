@@ -30,7 +30,7 @@ jobs:
           backers=$(jq -r '.project.backers_count' stats.json)
           comments=$(jq -r '.project.comments_count' stats.json)
           state=$(jq -r '.project.state' stats.json)
-          goal=15000
+          goal=20000
 
           percent=$(awk "BEGIN { printf \"%.2f\", ($pledged / $goal) * 100 }")
 

@@ -66,24 +66,6 @@
 	
 		<div class="mainbody">
 		
-		
-		<div class="kickstartercontainer">
-			<div class="donokickstartericon">
-				<img id="donoimage" class="donokickicon" src="graphics/kickstarter/Dono_fruit_basket_art.png">
-			</div>
-			
-			<div class="kickerstarterprogessbar">
-				<div class="helpus">Help us reach our Kickstarter goal at <a href="http://kck.st/46Z3mfF">kck.st/46Z3mfF</a>!</div>
-				<div id="kickstarter-progress">
-					<div class="progress-bar">
-						<div class="fill" id="progress-fill"></div>
-					</div>
-					<b class="amountraised"><span id="days-left"></span> days to go, <span id="amount-raised"></span> / <span id="goal-amount"></span> stretch goal</b>
-				</div>
-			</div>
-		</div>
-		
-		
 			<iframe class="steamtemp" src="https://store.steampowered.com/widget/1812250/" frameborder="0"></iframe>
 			
 			<div class="container">
@@ -126,75 +108,6 @@
 	
 	
 	</footer>
-
-	<script>
-		function daysRemaining(endTime) {
-		  const end = new Date(endTime);
-		  const now = new Date();
-		  const diffMs = end - now;
-		  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24) - 1);
-		  return diffDays > 0 ? diffDays : 0;
-		}
-
-		async function loadKickstarterData() {
-		  const res = await fetch('kickstarter.json');
-		  const data = await res.json();
-
-		  const pledged = data.pledged;
-		  const percent = data.percent;
-		  const goal = data.goal;
-		  const endTime = data.end_time;
-
-		  document.getElementById("progress-fill").style.width = `${percent}%`;
-		  document.getElementById("amount-raised").textContent = `$${pledged.toLocaleString()}`;
-		  document.getElementById("goal-amount").textContent = `$${goal.toLocaleString()}`;
-		  document.getElementById("days-left").textContent = daysRemaining(endTime);
-		}
-
-		loadKickstarterData();
-
-		function setRandomDonoImage() {
-		  const images = [
-			"graphics/kickstarter/Dono_Fly_Art.png",
-			// "graphics/kickstarter/Dono_front_Art.png",
-			"graphics/kickstarter/Dono_fruit_basket_art.png",
-			"graphics/kickstarter/Dono_Gaming.png",
-			"graphics/kickstarter/Dono_present_art.png",
-			"graphics/kickstarter/Dono_siting_art.png",
-			"graphics/kickstarter/Dono_slash_Art.png"
-		  ];
-
-		  const randomIndex = Math.floor(Math.random() * images.length);
-		  const selectedDono = images[randomIndex];
-
-		  const donoimg = document.getElementById("donoimage");
-		  if (donoimg) {
-			donoimg.src = selectedDono;
-		  }
-		}
-
-		setRandomDonoImage();
-
-
-		document.addEventListener("DOMContentLoaded", () => {
-		  const targetClasses = [".berrybanner"];
-		  const elements = document.querySelectorAll(targetClasses.join(", "));
-
-		  elements.forEach((element) => {
-			element.addEventListener("mousedown", () => {
-			  if (!element.classList.contains("animate")) {
-				element.classList.add("animate");
-
-				setTimeout(() => {
-				  element.classList.remove("animate");
-				}, 500);
-			  }
-			});
-		  });
-		});	
-	
-	
-	</script>
 	
 	
 </html>
